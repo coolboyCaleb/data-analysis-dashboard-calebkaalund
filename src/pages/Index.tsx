@@ -19,9 +19,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import DataUpload from '@/components/DataUpload';
 import Dashboard from '@/components/Dashboard';
 import { DataRow } from '@/types/data';
+// 🆕 WEEK 3: Import NameInput demo
+// import NameInput from '@/components/NameInput';
 
-import UploadProgressSimulator from "@/components/UploadProgressSimulator";
-
+// 🔧 WEEK 2: Import your UploadProgressSimulator component here
 // 🔧 WEEK 3+: Additional imports will be added as you progress
 
 const Index = () => {
@@ -38,30 +39,30 @@ const Index = () => {
   };
 
   return (
-     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        {/* 🎨 Hero Section - The top part of your homepage */}
-        <div className="container mx-auto px-4 py-8">
-           <div className="text-center mb-12">
-              {/* 🎯 Logo and Title */}
-              <div className="flex items-center justify-center mb-6">
-                 <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 rounded-full">
-                    <Database className="h-12 w-12 text-white" />
-                 </div>
-              </div>
-
-              {/* 📝 WEEK 1: Students customize this title with their name */}
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-                 Caleb Kaalund's Data Hub
-              </h1>
-              <p className="text-xl text-slate-600 mb-2">Data Insight Engine</p>
-              <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-                 Upload your dataset and instantly discover insights, visualize trends, and explore
-                 your data with interactive charts and analytics.
-              </p>
-              <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-                 Built by Caleb Kaalund - Future Software Engineer
-              </p>
-           </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* 🎨 Hero Section - The top part of your homepage */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center mb-12">
+          {/* 🎯 Logo and Title */}
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 rounded-full">
+              <Database className="h-12 w-12 text-white" />
+            </div>
+          </div>
+          
+          {/* 📝 WEEK 1: Students customize this title with their name */}
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+            Plug-N-Learn
+          </h1>
+          <p className="text-xl text-slate-600 mb-2">Data Insight Engine</p>
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+            Upload your dataset and instantly discover insights, visualize trends, and explore your data with interactive charts and analytics.
+          </p>
+          {/* 🆕 WEEK 3: Live Event Handling Demo (removed NameInput from homepage) */}
+          {/* <div className="mt-8 mb-8 flex justify-center">
+            <NameInput />
+          </div> */}
+        </div>
 
            <Card className="bg-white/50 backdrop-blur-sm border-purple-200">
               <CardHeader>

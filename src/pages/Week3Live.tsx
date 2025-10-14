@@ -1,5 +1,5 @@
 import Week3LiveDemo from '../components/Week3LiveDemo';
-
+import NameInput from '@/components/NameInput';
 const Week3Live = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -15,7 +15,7 @@ const Week3Live = () => {
             Try the NameInput demo below. Focus on controlled components, user input, and validation!
           </p>
         </div>
-        <Week3LiveDemo />
+        <NameInput />
       </div>
     </div>
   );

@@ -6,98 +6,50 @@ import { Button } from "./ui/button";
 const COLORS = ["#f87171", "#60a5fa", "#34d399", "#fbbf24", "#a78bfa"];
 
 const Week3LiveDemo = () => {
-  // Counter state
   const [count, setCount] = useState(0);
-  // Name input state
   const [name, setName] = useState("");
   const [greeting, setGreeting] = useState("");
-  const [nameError, setNameError] = useState("");
-  // Color picker state
-  const [bgColor, setBgColor] = useState("#fff");
-  // Toggle state
+  const [bgColor, setBgColor] = useState("#fff")
   const [showMsg, setShowMsg] = useState(true);
+  const [error, setError] = useState("");
 
-  // Reset all
+  const handleSubmit = () => {
+    setError("");
+
+  }
+
   const handleReset = () => {
-    setCount(0);
-    setName("");
-    setGreeting("");
-    setNameError("");
-    setBgColor("#fff");
-    setShowMsg(true);
-  };
-
-  // Name input submit
-  const handleNameSubmit = () => {
-    setNameError("");
-    if (!name.trim()) {
-      setNameError("Please enter your name");
-      return;
-    }
-    if (name.trim().length < 2) {
-      setNameError("Name must be at least 2 characters");
-      return;
-    }
-    setGreeting(`Hello, ${name.trim()}!`);
-  };
-
+    setCount(0)
+    setName("")
+    setGreeting("")
+    setBgColor("#fff")
+    setShowMsg(true)
+  }
+  
   return (
-    <Card className="max-w-xl mx-auto" style={{ background: bgColor }}>
-      <CardHeader>
-        <CardTitle>Week 3 Interactive Demo</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-8">
-        {/* Counter Button */}
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-lg font-semibold">Counter: {count}</span>
-          <Button onClick={() => setCount(count + 1)}>+1</Button>
-        </div>
-
-        {/* Name Input */}
-        <div className="flex flex-col items-center gap-2">
-          <Input
-            placeholder="Enter your name"
-            value={name}
-            onChange={e => {
-              setName(e.target.value);
-              setGreeting("");
-              setNameError("");
-            }}
-          />
-          <Button onClick={handleNameSubmit}>Say Hello</Button>
-          {nameError && <p className="text-red-600 text-sm">{nameError}</p>}
-          {greeting && <p className="text-green-600 font-medium">{greeting}</p>}
-        </div>
-
-        {/* Color Picker */}
-        <div className="flex flex-col items-center gap-2">
-          <span className="font-semibold">Pick a background color:</span>
-          <div className="flex gap-2">
-            {COLORS.map(color => (
-              <button
-                key={color}
-                style={{ background: color, width: 32, height: 32, borderRadius: "50%", border: "2px solid #fff" }}
-                onClick={() => setBgColor(color)}
-                aria-label={`Pick ${color}`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Toggle Switch */}
-        <div className="flex flex-col items-center gap-2">
-          <Button variant="outline" onClick={() => setShowMsg(v => !v)}>
-            {showMsg ? "Hide Message" : "Show Message"}
-          </Button>
-          {showMsg && <p className="text-blue-600">This message can be toggled!</p>}
-        </div>
-
-        {/* Reset All */}
-        <div className="flex flex-col items-center gap-2">
-          <Button variant="destructive" onClick={handleReset}>Reset All</Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div>
+      {greeting && (<p className="text-center text-green-600 font-medium">{greeting}</p>)}
+        <span>Count = {count}</span>
+        <Button onClick={() => setCount(count + 1)}>+1</Button>
+        <br></br>
+        <Input
+           placeholder="Enter your name"
+           value={name}
+           onChange={(e) => setName(e.target.value)}
+      />
+      <Button onClick={() => setGreeting('Hello, ${name}!')}>Submit</Button>
+      <span>Pick a background color:</span>
+      <div>
+        {COLORS.map((color) => (
+          <button key={color} style={{ background: color, width: 32, height: 32, borderRadius: "50%" }}onClick={() => setBgColor(bgColor)}/>
+        ))}
+      </div>
+      <Button onClick={() => setShowMsg(v => !v)}>
+        {showMsg ? "Hide Message" : "Show Message"}
+      </Button>
+      {showMsg && <p>This message can be toggled!</p>}
+      <Button onClick={handleReset}>Reset All</Button>
+     </div>
   );
 };
 

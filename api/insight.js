@@ -1,5 +1,5 @@
-// Moved from /server/insight.js for Vercel serverless deployment
-// This file will be deployed as /api/server/insight.js
+// Backend logic for Vercel serverless deployment
+// This file is deployed as /api/insight.js
 
 // ...existing code...
 
@@ -19,8 +19,8 @@ const schema = z.object({
   anomalies: z.array(z.string()),
 });
 
-// Vercel API route: /api/server/insight
-app.post("/api/server/insight", async (req, res) => {
+// Vercel API route: /api/insight
+app.post("/api/insight", async (req, res) => {
   try {
     const { prompt } = req.body;
     const { object } = await generateObject({

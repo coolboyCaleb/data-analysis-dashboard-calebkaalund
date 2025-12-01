@@ -53,3 +53,7 @@ A modern, interactive data analysis application built with React and TypeScript.
 4. **Ask Questions**: Use the AI chat to explore your data further.
 5. **Download Results**: Export insights and visualizations using the buttons in the header.
 
+## 🔧 Backend (Optional)
+
+- **Node.js & Express**: Located in `api/insight.js`, ready for Vercel serverless deployment.
+- **OpenAI API**: Used for generating insights (currently mocked in frontend).

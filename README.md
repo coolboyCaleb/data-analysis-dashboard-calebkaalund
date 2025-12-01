@@ -57,3 +57,21 @@ A modern, interactive data analysis application built with React and TypeScript.
 
 - **Node.js & Express**: Located in `api/insight.js`, ready for Vercel serverless deployment.
 - **OpenAI API**: Used for generating insights (currently mocked in frontend).
+
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👨‍💻 About the Developer
+Built by Caleb Kaalund as part of a comprehensive React/TypeScript development course.
+- LinkedIn: [Caleb Kaalund](https://www.linkedin.com/in/caleb-kaalund/)
+- GitHub: [coolboyCaleb](https://github.com/coolboyCaleb)
+- Email: calebkaalund@gmail.com
+
+## 🙏 Acknowledgments
+- Course instructors and fellow students for feedback and support (Tabia Cannon - tabia@bvcc.vc)
+- [shadcn/ui](https://ui.shadcn.com/) for the beautiful component library
+- [Recharts](https://recharts.org/) for the excellent charting library
+- [Vercel](https://vercel.com) for seamless deployment experience
+
+---
+*This project represents 10 weeks of intensive learning and development in modern React/TypeScript practices. Every feature was built from scratch with a focus on code quality, user experience, and professional development standards.*

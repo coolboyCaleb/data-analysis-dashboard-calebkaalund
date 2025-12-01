@@ -20,8 +20,10 @@ import Dashboard from "@/components/Dashboard";
 import { DataRow } from "@/types/data";
 
 import UploadProgressSimulator from "@/components/UploadProgressSimulator";
+import SimpleChart from "@/components/SimpleChart";
 
 // 🔧 WEEK 3+: Additional imports will be added as you progress
+import MockAIChat from '@/components/MockAIChat';
 
 const Index = () => {
    // 🧠 Component State - this is your component's memory!
@@ -61,25 +63,6 @@ const Index = () => {
                   Built by Caleb Kaalund - Future Software Engineer
                </p>
             </div>
-            {/* 🆕 WEEK 3: Live Event Handling Demo (removed NameInput from homepage) */}
-            {/* <div className="mt-8 mb-8 flex justify-center">
-            <NameInput />
-          </div> */}
-            <Card className="bg-white/50 backdrop-blur-sm border-purple-200">
-               <CardHeader>
-                  <CardTitle className="flex items-center">
-                     <Upload className="mr-3 h-6 w-6 text-purple-600" />
-                     Interactive Progress Demo
-                  </CardTitle>
-                  <CardDescription>
-                     Try our upload progress simulator built with React state!
-                  </CardDescription>
-               </CardHeader>
-               <CardContent>
-                  <UploadProgressSimulator />
-               </CardContent>
-            </Card>
-
             {data.length === 0 ? (
                <>
                   {/* 🎨 Features Grid - Shows what your app can do */}

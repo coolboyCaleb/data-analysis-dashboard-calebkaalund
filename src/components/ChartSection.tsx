@@ -1,68 +1,61 @@
-
-import { useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, ScatterChart, Scatter, Legend 
+} from 'recharts';
 import { DataRow } from '@/types/data';
-import { getDataSummary, getColumnValues } from '@/utils/dataAnalysis';
-
-// 📊 Week 6: Professional Data Visualization - Making Your Data Come Alive
-// Students - Transform raw data into compelling visual stories! This component showcases advanced React patterns.
-// 
-// Journey milestone: By now you've built the foundation (Weeks 1-5), now we're adding professional polish!
-// 
-// Learning objectives:
-// - Master React performance optimization with useMemo
-// - Create dynamic, responsive charts with Recharts
-// - Implement user-controlled data visualization
-// - Apply professional UI/UX patterns
+import { getDataSummary } from '@/utils/dataAnalysis';
 
 interface ChartSectionProps {
   data: DataRow[];
   showAll?: boolean;
+  interactive?: boolean;
 }
 
-// Color palette for charts - Week 8 enhancement: Make this theme-aware and customizable
 const COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
 
-const ChartSection = ({ data, showAll = false }: ChartSectionProps) => {
-  // 🚀 React Performance Optimization - Critical for Professional Apps
-  // Students - Master the useMemo hook for optimal performance
-  // Why do we use useMemo here? What happens without it?
-  // Answer: Prevents expensive recalculations on every render, keeping your app fast!
+const ChartSection = ({ data, showAll = false, interactive = false }: ChartSectionProps) => {
   const summary = useMemo(() => getDataSummary(data), [data]);
   
-  // 🎯 Week 6-7: Dynamic User Controls - Professional Dashboard Feature
-  // Students - Add user control over which columns to visualize
-  // Current: Automatically selects first 2 numeric columns
-  // Week 7 enhancement: Let users choose columns, filter data, and save preferences
   const numericColumns = useMemo(() => {
     return Object.entries(summary.columnTypes)
       .filter(([_, type]) => type === 'numeric')
-      .map(([column]) => column)
-      .slice(0, showAll ? 10 : 2);
-  }, [summary, showAll]);
+      .map(([column]) => column);
+  }, [summary]);
 
-  // 📈 Week 6-8: Smart Data Processing - Handling Real-World Data
-  // Students - Learn to handle large datasets professionally
-  // Current: Shows first 20 rows (good for demos)
-  // Week 8 enhancement: Add pagination, aggregation, and intelligent sampling
+  // Interactive state
+  const [selectedColumn, setSelectedColumn] = useState<string>("");
+  const [chartType, setChartType] = useState<"bar" | "line" | "area" | "pie" | "scatter">("bar");
+
+  // Set default selection
+  useEffect(() => {
+    if (numericColumns.length > 0 && !selectedColumn) {
+      setSelectedColumn(numericColumns[0]);
+    }
+  }, [numericColumns, selectedColumn]);
+
   const chartData = useMemo(() => {
     if (numericColumns.length === 0) return [];
     
-    // Week 7 improvement: Use meaningful labels instead of "Row 1, Row 2..."
-    // Try using actual data values for better chart readability
-    return data.slice(0, 20).map((row, index) => {
+    return data.slice(0, 50).map((row, index) => {
       const item: any = { name: `Row ${index + 1}` };
+      // Try to find a text column to use as a label
+      const labelCol = Object.keys(row).find(key => isNaN(Number(row[key])));
+      if (labelCol) {
+        item.name = String(row[labelCol]).substring(0, 15); // Truncate long labels
+      }
+
       numericColumns.forEach(col => {
-        item[col] = typeof row[col] === 'number' ? row[col] : 0;
+        const val = Number(row[col]);
+        item[col] = isNaN(val) ? 0 : val;
       });
       return item;
     });
   }, [data, numericColumns]);
 
-  // 💡 Week 3-4: Professional Error Handling
-  // Students - Create helpful, actionable error messages
-  // Good UX guides users toward success, even when things go wrong
   if (numericColumns.length === 0) {
     return (
       <Card>
@@ -73,89 +66,240 @@ const ChartSection = ({ data, showAll = false }: ChartSectionProps) => {
           <p className="text-gray-500 text-center py-8">
             No numeric columns found for visualization. Upload data with numeric values to see charts.
           </p>
-          {/* Week 4 enhancement: Add helpful tips for data format and examples */}
         </CardContent>
       </Card>
     );
   }
 
-  // 📊 Week 7-8: Advanced Chart Library - Professional Visualization Options
-  // Students - Expand your visualization toolkit
-  // Current: bar, line, pie charts (solid foundation!)
-  // Week 8 additions: scatter plots, area charts, histograms, and interactive features
+  // Render a single interactive chart
+  if (interactive) {
+    const renderInteractiveChart = () => {
+      if (!selectedColumn) return null;
+
+      switch (chartType) {
+        case 'bar':
+          return (
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey={selectedColumn} fill={COLORS[0]} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          );
+        case 'line':
+          return (
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey={selectedColumn} stroke={COLORS[1]} strokeWidth={3} activeDot={{ r: 8 }} />
+            </LineChart>
+          );
+        case 'area':
+          return (
+            <AreaChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Area type="monotone" dataKey={selectedColumn} stroke={COLORS[2]} fill={COLORS[2]} fillOpacity={0.3} />
+            </AreaChart>
+          );
+        case 'pie':
+          return (
+            <PieChart>
+              <Pie
+                data={chartData.slice(0, 10)}
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey={selectedColumn}
+                nameKey="name"
+                label
+              >
+                {chartData.slice(0, 10).map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          );
+        case 'scatter':
+           // For scatter, we ideally need 2 columns. If only 1 selected, we can use index vs value, 
+           // or we could add a second selector. For simplicity, let's use Index vs Value if only 1 is picked,
+           // or maybe just disable scatter if we want to be strict. 
+           // Let's stick to the SimpleChart behavior: Index vs Value.
+           return (
+            <ScatterChart>
+              <CartesianGrid />
+              <XAxis type="category" dataKey="name" name="Item" />
+              <YAxis type="number" dataKey={selectedColumn} name={selectedColumn} />
+              <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+              <Legend />
+              <Scatter name={selectedColumn} data={chartData} fill={COLORS[3]} />
+            </ScatterChart>
+          );
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <Card className="w-full shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-gray-800">Interactive Visualization</CardTitle>
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Select Data Column</label>
+              <Select value={selectedColumn} onValueChange={setSelectedColumn}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select column" />
+                </SelectTrigger>
+                <SelectContent>
+                  {numericColumns.map(col => (
+                    <SelectItem key={col} value={col}>{col}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Chart Type</label>
+              <div className="flex flex-wrap gap-2">
+                {["bar", "line", "area", "pie", "scatter"].map((type) => (
+                  <Button
+                    key={type}
+                    variant={chartType === type ? "default" : "outline"}
+                    onClick={() => setChartType(type as any)}
+                    size="sm"
+                    className="capitalize"
+                  >
+                    {type}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[400px] w-full mt-4 border rounded-lg p-4 bg-white">
+            <ResponsiveContainer width="100%" height="100%">
+              {renderInteractiveChart()!}
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Non-interactive "Overview" mode (Grid of charts)
   const charts = showAll ? [
     { type: 'bar', title: 'Bar Chart' },
     { type: 'line', title: 'Line Chart' },
-    { type: 'pie', title: 'Distribution' }
+    { type: 'area', title: 'Area Chart' },
+    { type: 'pie', title: 'Distribution' },
+    { type: 'scatter', title: 'Scatter Plot' }
   ] : [{ type: 'bar', title: 'Data Overview' }];
 
+  const renderStaticChart = (type: string) => {
+     // Use the first few numeric columns for static charts
+     const displayColumns = numericColumns.slice(0, showAll ? 10 : 2);
+     
+     switch (type) {
+      case 'bar':
+        return (
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            {displayColumns.map((column, idx) => (
+              <Bar key={column} dataKey={column} fill={COLORS[idx % COLORS.length]} />
+            ))}
+          </BarChart>
+        );
+      case 'line':
+        return (
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            {displayColumns.map((column, idx) => (
+              <Line key={column} type="monotone" dataKey={column} stroke={COLORS[idx % COLORS.length]} strokeWidth={2} />
+            ))}
+          </LineChart>
+        );
+      case 'area':
+        return (
+          <AreaChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            {displayColumns.map((column, idx) => (
+              <Area key={column} type="monotone" dataKey={column} stroke={COLORS[idx % COLORS.length]} fill={COLORS[idx % COLORS.length]} fillOpacity={0.3} />
+            ))}
+          </AreaChart>
+        );
+      case 'pie':
+        return (
+          <PieChart>
+            <Pie
+              data={chartData.slice(0, 6)}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey={displayColumns[0]}
+              nameKey="name"
+              label
+            >
+              {chartData.slice(0, 6).map((_, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
+        );
+      case 'scatter':
+        if (displayColumns.length < 2) return <div className="flex items-center justify-center h-full text-gray-400">Need 2+ numeric columns</div>;
+        return (
+          <ScatterChart>
+            <CartesianGrid />
+            <XAxis type="number" dataKey={displayColumns[0]} name={displayColumns[0]} />
+            <YAxis type="number" dataKey={displayColumns[1]} name={displayColumns[1]} />
+            <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+            <Legend />
+            <Scatter name={`${displayColumns[0]} vs ${displayColumns[1]}`} data={chartData} fill={COLORS[0]} />
+          </ScatterChart>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className={`space-y-6 ${showAll ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : ''}`}>
+    <div className={`space-y-6 ${showAll ? 'grid grid-cols-1 lg:grid-cols-2 gap-6 space-y-0' : ''}`}>
       {charts.map(({ type, title }) => (
-        <Card key={type}>
+        <Card key={type} className="w-full">
           <CardHeader>
             <CardTitle>{title}</CardTitle>
-            {/* Week 8-9: Add professional chart controls (zoom, filter, export) */}
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
+            <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                {/* 🎨 Week 6: Master Chart Selection - Data Visualization Best Practices */}
-                {/* Students - Learn when to use bar vs line vs pie charts */}
-                {/* Professional tip: Chart choice should match your data story! */}
-                {type === 'bar' ? (
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    {/* Week 7: Add custom tooltip content for better user experience */}
-                    {numericColumns.map((column, idx) => (
-                      <Bar 
-                        key={column} 
-                        dataKey={column} 
-                        fill={COLORS[idx % COLORS.length]} 
-                      />
-                    ))}
-                  </BarChart>
-                ) : type === 'line' ? (
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    {numericColumns.map((column, idx) => (
-                      <Line 
-                        key={column}
-                        type="monotone" 
-                        dataKey={column} 
-                        stroke={COLORS[idx % COLORS.length]}
-                        strokeWidth={2}
-                      />
-                    ))}
-                  </LineChart>
-                ) : (
-                  // 🍰 Week 6-7: Smart Pie Chart Implementation
-                  // Students - Learn to handle pie chart data professionally
-                  // Current: Uses first numeric column (perfect for learning!)
-                  // Week 7: Add multi-column support and intelligent data grouping
-                  <PieChart>
-                    <Pie
-                      data={getColumnValues(data, numericColumns[0]).slice(0, 6).map((value, index) => ({ name: `Item ${index + 1}`, value }))}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label
-                    >
-                      {getColumnValues(data, numericColumns[0]).slice(0, 6).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                )}
+                {renderStaticChart(type)!}
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -166,17 +310,3 @@ const ChartSection = ({ data, showAll = false }: ChartSectionProps) => {
 };
 
 export default ChartSection;
-
-// 🚀 Week 8-10: Professional Features - Taking Your Charts to Production Level
-// Students - Choose your advanced features to implement:
-// 
-// Week 8-9 Options:
-// • Interactive drilling (click charts to explore deeper)
-// • Real-time data updates and live dashboards
-// • Professional export features (PNG, PDF, sharing)
-// • Custom themes that match your brand
-// 
-// Week 10 Polish:
-// • Accessibility excellence (ARIA labels, keyboard navigation)
-// • Performance optimization for large datasets
-// • Mobile-responsive chart behaviors

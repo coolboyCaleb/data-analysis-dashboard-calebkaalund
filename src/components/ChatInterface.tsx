@@ -1,11 +1,10 @@
-
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Send, MessageCircle, Bot, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { DataRow } from '@/types/data';
-import { generateDataInsights, getDataSummary, getNumericColumns } from '@/utils/dataAnalysis';
+import { getDataSummary } from '@/utils/dataAnalysis';
 
 interface ChatInterfaceProps {
   data: DataRow[];
@@ -22,153 +21,35 @@ const ChatInterface = ({ data }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Smart AI response generation based on data context
-  const generateAIResponse = (userMessage: string, dataContext: DataRow[]): string => {
-    const lowerMessage = userMessage.toLowerCase();
-    const summary = getDataSummary(dataContext);
-    const insights = generateDataInsights(dataContext);
-    const numericColumns = getNumericColumns(dataContext);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-    // Pattern matching for different types of questions
-    if (lowerMessage.includes('summary') || lowerMessage.includes('overview')) {
-      return `Based on your dataset, here's what I can tell you:
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
 
-📊 **Dataset Overview:**
-- ${summary.totalRows.toLocaleString()} total rows
-- ${summary.totalColumns} columns (${summary.numericColumns} numeric, ${summary.textColumns} text)
-- Key numeric columns: ${numericColumns.slice(0, 3).join(', ')}
-
-🔍 **Top Insights:**
-${insights.slice(0, 3).map(insight => `• ${insight.title}: ${insight.description}`).join('\n')}
-
-Would you like me to dive deeper into any specific aspect of your data?`;
+  const getMockResponse = async (question: string) => {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    const lowerQ = question.toLowerCase();
+    if (lowerQ.includes('average') || lowerQ.includes('mean')) {
+      return "Based on your data, the average value appears to be in the mid-range. This suggests a balanced distribution with most values clustering around the center.";
     }
-
-    if (lowerMessage.includes('chart') || lowerMessage.includes('visualiz')) {
-      const suggestions = [];
-      if (numericColumns.length >= 2) {
-        suggestions.push(`📈 **Scatter Plot**: Compare ${numericColumns[0]} vs ${numericColumns[1]} to find correlations`);
-      }
-      if (numericColumns.length >= 1) {
-        suggestions.push(`📊 **Bar Chart**: Show distribution of ${numericColumns[0]} values`);
-        suggestions.push(`📈 **Line Chart**: Track trends in ${numericColumns[0]} over time`);
-      }
-      
-      return `Great question! Based on your data structure, here are some visualization recommendations:
-
-${suggestions.join('\n')}
-
-The Charts tab already shows some of these visualizations. Would you like me to explain how to interpret any specific chart type?`;
+    if (lowerQ.includes('trend') || lowerQ.includes('pattern')) {
+      return "I can see an interesting upward trend in your data! There appears to be consistent growth in the later periods, which could indicate improving performance or seasonal effects.";
     }
-
-    if (lowerMessage.includes('trend') || lowerMessage.includes('pattern')) {
-      const trendInsights = insights.filter(i => i.type === 'trend' || i.type === 'correlation');
-      if (trendInsights.length > 0) {
-        return `I've identified these patterns in your data:
-
-${trendInsights.map(insight => `🔍 **${insight.title}**: ${insight.description}`).join('\n\n')}
-
-These patterns can help you understand the underlying relationships in your dataset. Would you like me to elaborate on any of these findings?`;
-      } else {
-        return `To identify trends, I'd need to analyze your data over time or look for correlations between variables. 
-
-Your dataset has ${numericColumns.length} numeric columns that I can analyze for patterns. Some questions that might reveal trends:
-- How do values change over time?
-- Are there seasonal patterns?
-- Do certain variables move together?
-
-Can you tell me more about what kind of trends you're looking for?`;
-      }
+    if (lowerQ.includes('highest') || lowerQ.includes('maximum') || lowerQ.includes('peak')) {
+      return "The highest value in your dataset represents a peak performance period. This could indicate optimal conditions or a particularly successful time period worth studying further.";
     }
-
-    if (lowerMessage.includes('outlier') || lowerMessage.includes('unusual')) {
-      const outlierInsights = insights.filter(i => i.type === 'outlier');
-      if (outlierInsights.length > 0) {
-        return `I've detected some outliers in your data:
-
-${outlierInsights.map(insight => `⚠️ **${insight.title}**: ${insight.description}`).join('\n\n')}
-
-Outliers can represent:
-- Data entry errors that need correction
-- Exceptional cases worth investigating
-- Natural variation in your dataset
-
-Would you like me to help you decide how to handle these outliers?`;
-      } else {
-        return `Good news! I haven't detected any obvious outliers in your numeric columns. This suggests your data is relatively consistent.
-
-However, outliers can be context-dependent. If you suspect there might be unusual values, you could:
-- Check the Data tab for values that seem out of place
-- Look at the charts for data points that stand apart
-- Tell me about specific ranges you'd expect for certain columns
-
-Is there a particular column where you suspect outliers might exist?`;
-      }
+    if (lowerQ.includes('lowest') || lowerQ.includes('minimum')) {
+      return "The minimum value might represent a challenging period or starting point. Understanding what caused this low point could provide valuable insights for improvement.";
     }
-
-    if (lowerMessage.includes('missing') || lowerMessage.includes('incomplete')) {
-      const missingData = Object.entries(summary.missingValues).filter(([_, count]) => count > 0);
-      if (missingData.length > 0) {
-        return `I found missing data in your dataset:
-
-${missingData.map(([column, count]) => {
-          const percentage = (count / summary.totalRows * 100).toFixed(1);
-          return `📋 **${column}**: ${count} missing values (${percentage}%)`;
-        }).join('\n')}
-
-**Recommendations:**
-- For small amounts of missing data (<5%), you might remove those rows
-- For larger gaps, consider filling with averages or median values
-- Sometimes missing data is meaningful and should be treated as a separate category
-
-Would you like specific advice for handling missing data in any of these columns?`;
-      } else {
-        return `Excellent! Your dataset appears to be complete with no missing values detected across all ${summary.totalColumns} columns.
-
-This is great for analysis because:
-✅ No need for data cleaning or imputation
-✅ All statistical calculations will be accurate
-✅ Charts and visualizations will show complete picture
-
-Your data quality looks solid for conducting thorough analysis!`;
-      }
+    if (lowerQ.includes('why') || lowerQ.includes('reason')) {
+      return "While I can see the patterns in your numbers, determining the 'why' requires domain knowledge. Consider external factors like seasonality, market conditions, or operational changes during those periods.";
     }
-
-    // General data questions
-    if (lowerMessage.includes('column') || lowerMessage.includes('field')) {
-      const columns = Object.keys(dataContext[0] || {});
-      return `Your dataset contains ${columns.length} columns:
-
-**Numeric columns** (${summary.numericColumns}): ${numericColumns.join(', ')}
-**Text columns** (${summary.textColumns}): ${columns.filter(col => summary.columnTypes[col] === 'text').join(', ')}
-
-Each column type offers different analysis opportunities:
-- Numeric columns: Statistical analysis, correlations, trends
-- Text columns: Categorization, frequency analysis, grouping
-
-Which columns are you most interested in analyzing?`;
-    }
-
-    // Default response with helpful suggestions
-    return `I'm here to help you understand your data! Based on your dataset with ${summary.totalRows.toLocaleString()} rows and ${summary.totalColumns} columns, I can help you with:
-
-🔍 **Data Analysis Questions:**
-- "Give me a summary of this data"
-- "What patterns do you see?"
-- "Are there any outliers?"
-- "What charts should I create?"
-
-📊 **Specific Insights:**
-- Statistical summaries of numeric columns
-- Missing data analysis
-- Correlation suggestions
-- Data quality assessment
-
-💡 **Quick Insights:**
-${insights.slice(0, 2).map(insight => `• ${insight.title}`).join('\n')}
-
-What would you like to explore first?`;
+    return "That's an interesting question about your data! The patterns I see suggest there are meaningful insights to explore. Could you be more specific about what aspect interests you most?";
   };
 
   const handleSendMessage = async () => {
@@ -186,50 +67,65 @@ What would you like to explore first?`;
     setInput('');
     setIsLoading(true);
 
-    // Simulate realistic AI response time
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(currentInput, data);
-      
+    try {
+      const aiContent = await getMockResponse(currentInput);
+
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: aiResponse,
+        content: aiContent,
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Chat Error:", error);
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: "I'm sorry, I'm having trouble processing your request right now.",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1000 + Math.random() * 1000); // 1-2 second delay for realism
+    }
   };
 
   return (
-    <Card className="h-[600px] flex flex-col">
-      <CardHeader>
+    <Card className="h-[600px] flex flex-col shadow-md">
+      <CardHeader className="border-b bg-white/50 backdrop-blur-sm">
         <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5" />
+          <MessageCircle className="h-5 w-5 text-blue-600" />
           Data Analysis Assistant
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Ask questions about your data, request insights, or get help understanding patterns
         </p>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col">
-        <div className="flex-1 overflow-y-auto space-y-4 mb-4 min-h-0">
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+        {/* Messages Container - Scrollable Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
           {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="font-medium">Ready to analyze your data!</p>
-              <p className="text-sm mt-2">Try asking:</p>
-              <div className="mt-4 space-y-2 text-left max-w-md mx-auto">
-                <div className="bg-muted/50 p-2 rounded text-xs">
+            <div className="text-center text-muted-foreground py-12">
+              <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Bot className="h-8 w-8 text-blue-600" />
+              </div>
+              <p className="font-medium text-lg text-gray-700">Ready to analyze your data!</p>
+              <p className="text-sm mt-2 text-gray-500">Try asking:</p>
+              <div className="mt-6 space-y-2 text-left max-w-xs mx-auto">
+                <button 
+                  onClick={() => setInput("Give me a summary of this dataset")}
+                  className="w-full text-left bg-white p-3 rounded-lg border hover:border-blue-300 hover:shadow-sm transition-all text-sm text-gray-700"
+                >
                   "Give me a summary of this dataset"
-                </div>
-                <div className="bg-muted/50 p-2 rounded text-xs">
-                  "What patterns do you see in the data?"
-                </div>
-                <div className="bg-muted/50 p-2 rounded text-xs">
-                  "Are there any outliers I should know about?"
-                </div>
+                </button>
+                <button 
+                  onClick={() => setInput("What patterns do you see?")}
+                  className="w-full text-left bg-white p-3 rounded-lg border hover:border-blue-300 hover:shadow-sm transition-all text-sm text-gray-700"
+                >
+                  "What patterns do you see?"
+                </button>
               </div>
             </div>
           ) : (
@@ -239,19 +135,19 @@ What would you like to explore first?`;
                 className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`flex gap-3 max-w-[85%] ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.type === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${
+                    message.type === 'user' ? 'bg-blue-600 text-white' : 'bg-white border text-blue-600'
                   }`}>
                     {message.type === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                   </div>
-                  <div className={`rounded-lg p-3 ${
+                  <div className={`rounded-2xl p-4 shadow-sm ${
                     message.type === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
+                      ? 'bg-blue-600 text-white rounded-tr-none'
+                      : 'bg-white border text-gray-800 rounded-tl-none'
                   }`}>
-                    <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-                    <div className="text-xs opacity-70 mt-2">
-                      {message.timestamp.toLocaleTimeString()}
+                    <div className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</div>
+                    <div className={`text-[10px] mt-2 ${message.type === 'user' ? 'text-blue-100' : 'text-gray-400'}`}>
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                 </div>
@@ -262,48 +158,51 @@ What would you like to explore first?`;
           {isLoading && (
             <div className="flex gap-3 justify-start">
               <div className="flex gap-3 max-w-[85%]">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                  <Bot className="h-4 w-4" />
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white border flex items-center justify-center shadow-sm">
+                  <Bot className="h-4 w-4 text-blue-600" />
                 </div>
-                <div className="bg-muted text-muted-foreground rounded-lg p-3">
+                <div className="bg-white border text-gray-800 rounded-2xl rounded-tl-none p-4 shadow-sm">
                   <div className="flex items-center gap-2">
                     <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
-                      <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                      <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                     </div>
-                    <span className="text-sm">Analyzing your data...</span>
+                    <span className="text-sm text-gray-500 ml-2">Analyzing data...</span>
                   </div>
                 </div>
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
-        <div className="flex gap-2">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about your data... (e.g., 'What insights can you find?' or 'Explain the trends')"
-            className="flex-1 min-h-[60px] resize-none"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-          />
-          <Button 
-            onClick={handleSendMessage} 
-            disabled={!input.trim() || isLoading}
-            className="self-end"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="text-xs text-muted-foreground mt-2 text-center">
-          💡 Press <kbd className="bg-muted px-1 rounded">Enter</kbd> to send • <kbd className="bg-muted px-1 rounded">Shift+Enter</kbd> for new line
+        {/* Input Area */}
+        <div className="p-4 bg-white border-t">
+          <div className="flex gap-2">
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about your data..."
+              className="flex-1 min-h-[50px] max-h-[120px] resize-none focus-visible:ring-blue-500"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+            />
+            <Button 
+              onClick={handleSendMessage} 
+              disabled={!input.trim() || isLoading}
+              className="self-end h-[50px] w-[50px] rounded-xl bg-blue-600 hover:bg-blue-700"
+            >
+              <Send className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="text-xs text-gray-400 mt-2 text-center">
+            Press Enter to send • Shift+Enter for new line
+          </div>
         </div>
       </CardContent>
     </Card>

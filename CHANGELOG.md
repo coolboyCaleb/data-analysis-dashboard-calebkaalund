@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Git workflow tutorial for students
 - Troubleshooting guide for common issues
 
-## [v1.0-week1] - 2024-01-08
+## [v1.0-week1] - 2025-12-01
 
 ### Added
 - Initial project setup with React, TypeScript, and Vite
